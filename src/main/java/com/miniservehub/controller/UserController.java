@@ -39,7 +39,7 @@ public class UserController {
     public Result<UserDTO> createUser(@Valid @RequestBody UserDTO userDTO) {
         logger.info("创建用户请求: {}", userDTO.getUsername());
         UserDTO createdUser = userService.createUser(userDTO);
-        return Result.success("用户创建成功", createdUser);
+        return Result.success("用户导出成功", createdUser);
     }
 
     @Operation(summary = "根据ID获取用户", description = "根据用户ID获取用户详细信息")
@@ -67,7 +67,7 @@ public class UserController {
             @Valid @RequestBody UserDTO userDTO) {
         logger.info("更新用户请求: ID={}", id);
         UserDTO updatedUser = userService.updateUser(id, userDTO);
-        return Result.success("用户信息更新成功", updatedUser);
+        return Result.success("用户状态更新成功", updatedUser);
     }
 
     @Operation(summary = "删除用户", description = "根据ID删除用户")
@@ -76,7 +76,9 @@ public class UserController {
             @Parameter(description = "用户ID", required = true) @PathVariable Long id) {
         logger.info("删除用户请求: ID={}", id);
         userService.deleteUser(id);
-        return Result.success("用户删除成功");
+        Result<Void> result = Result.success();
+        result.setMessage("用户删除成功");
+        return result;
     }
 
     @Operation(summary = "批量删除用户", description = "根据ID列表批量删除用户")
@@ -84,7 +86,9 @@ public class UserController {
     public Result<Void> batchDeleteUsers(@RequestBody List<Long> ids) {
         logger.info("批量删除用户请求: IDs={}", ids);
         userService.batchDeleteUsers(ids);
-        return Result.success("批量删除用户成功");
+        Result<Void> result = Result.success();
+        result.setMessage("批量删除成功");
+        return result;
     }
 
     @Operation(summary = "分页查询用户", description = "分页获取用户列表")
@@ -146,7 +150,9 @@ public class UserController {
             @Parameter(description = "用户ID", required = true) @PathVariable Long id) {
         logger.info("启用用户请求: ID={}", id);
         userService.enableUser(id);
-        return Result.success("用户启用成功");
+        Result<Void> result = Result.success();
+        result.setMessage("用户启用成功");
+        return result;
     }
 
     @Operation(summary = "禁用用户", description = "禁用指定的用户")
@@ -155,7 +161,9 @@ public class UserController {
             @Parameter(description = "用户ID", required = true) @PathVariable Long id) {
         logger.info("禁用用户请求: ID={}", id);
         userService.disableUser(id);
-        return Result.success("用户禁用成功");
+        Result<Void> result = Result.success();
+        result.setMessage("用户禁用成功");
+        return result;
     }
 
     @Operation(summary = "批量更新用户状态", description = "批量更新用户状态")
@@ -164,7 +172,9 @@ public class UserController {
             @RequestBody BatchUpdateStatusRequest request) {
         logger.info("批量更新用户状态请求: IDs={}, status={}", request.getIds(), request.getStatus());
         userService.batchUpdateStatus(request.getIds(), request.getStatus());
-        return Result.success("批量更新用户状态成功");
+        Result<Void> result = Result.success();
+        result.setMessage("批量更新用户状态成功");
+        return result;
     }
 
     @Operation(summary = "重置用户密码", description = "重置指定用户的密码")
@@ -174,7 +184,9 @@ public class UserController {
             @RequestBody ResetPasswordRequest request) {
         logger.info("重置用户密码请求: ID={}", id);
         userService.resetPassword(id, request.getNewPassword());
-        return Result.success("密码重置成功");
+        Result<Void> result = Result.success();
+        result.setMessage("密码重置成功");
+        return result;
     }
 
     @Operation(summary = "检查用户名是否存在", description = "检查指定用户名是否已被使用")

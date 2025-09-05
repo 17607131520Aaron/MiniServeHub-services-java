@@ -67,7 +67,7 @@ src/main/java/com/miniservehub/
 - **数据库监控** - Druid监控面板
 - **API文档** - Knife4j自动生成
 
-### 🔧 开发特性
+### 开发特性
 - **代码生成** - MyBatis Plus代码生成
 - **热部署** - Spring Boot DevTools
 - **多环境配置** - dev/test/prod环境隔离
@@ -76,11 +76,35 @@ src/main/java/com/miniservehub/
 ## 快速开始
 
 ### 环境要求
+- Java 21+
+- Maven 3.6+
+- MySQL 8.0+
+- Redis 6.0+
 
-- **JDK 21+**
-- **Maven 3.6+**
-- **MySQL 8.0+**
-- **Redis 6.0+**
+### Maven阿里云镜像配置
+
+本项目已配置项目级别的阿里云镜像，包含：
+
+1. **项目内配置文件**: `.mvn/settings.xml`
+   - 阿里云中央仓库镜像
+   - 阿里云公共仓库镜像
+   - 完整的profiles配置
+
+2. **pom.xml中的仓库配置**:
+   - 阿里云中央仓库: `https://maven.aliyun.com/repository/central`
+   - 阿里云公共仓库: `https://maven.aliyun.com/repository/public`
+   - 阿里云Spring仓库: `https://maven.aliyun.com/repository/spring`
+
+3. **使用方法**:
+   ```bash
+   # 使用项目内的settings.xml
+   mvn -s .mvn/settings.xml clean compile
+   
+   # 或者直接使用，pom.xml中的仓库配置会自动生效
+   mvn clean compile
+   ```
+
+### 运行步骤
 
 ### 数据库准备
 
