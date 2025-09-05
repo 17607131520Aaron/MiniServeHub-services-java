@@ -104,7 +104,49 @@ src/main/java/com/miniservehub/
    mvn clean compile
    ```
 
-### 运行步骤
+## 📥 依赖下载
+
+### 方式一：使用项目内阿里云镜像（推荐）
+```bash
+# 下载项目依赖（使用阿里云镜像，速度更快）
+mvn -s .mvn/settings.xml clean install
+
+# 或者只下载依赖不编译
+mvn -s .mvn/settings.xml dependency:resolve
+```
+
+### 方式二：使用默认配置
+```bash
+# 使用pom.xml中配置的阿里云仓库
+mvn clean install
+
+# 首次下载可能需要一些时间，后续会使用本地缓存
+mvn dependency:resolve
+```
+
+### 依赖下载说明
+- 项目使用阿里云镜像，国内下载速度3-8MB/s
+- 首次下载约需要2-5分钟（取决于网络状况）
+- 依赖缓存在 `~/.m2/repository` 目录
+- 如遇下载失败，可删除缓存重新下载：`rm -rf ~/.m2/repository`
+
+## 🚀 项目启动
+
+### 前置条件检查
+```bash
+# 检查Java版本（需要21+）
+java -version
+
+# 检查Maven版本（需要3.6+）
+mvn -version
+
+# 检查MySQL服务状态
+mysql --version
+mysqladmin ping
+
+# 检查Redis服务状态
+redis-cli ping
+```
 
 ### 数据库准备
 
@@ -124,39 +166,152 @@ spring:
     password: your_password
 ```
 
-### 启动应用
+### 启动步骤
 
-1. **克隆项目**
+#### 1. 克隆项目
 ```bash
-git clone <repository-url>
+git clone https://github.com/17607131520Aaron/MiniServeHub-services-java.git
 cd MiniServeHub-services-java
 ```
 
-2. **安装依赖**
+#### 2. 下载依赖
 ```bash
+# 推荐：使用项目内阿里云镜像
+mvn -s .mvn/settings.xml clean install
+
+# 或者使用默认配置
 mvn clean install
 ```
 
-3. **启动Redis**
+#### 3. 启动Redis服务
 ```bash
+# macOS (使用Homebrew)
+brew services start redis
+
+# 或者直接启动
 redis-server
+
+# Linux
+sudo systemctl start redis
+
+# Windows
+redis-server.exe
 ```
 
-4. **启动应用**
+#### 4. 启动MySQL服务
 ```bash
+# macOS (使用Homebrew)
+brew services start mysql
+
+# Linux
+sudo systemctl start mysql
+
+# Windows
+net start mysql
+```
+
+#### 5. 启动应用
+
+**方式一：使用Maven（推荐）**
+```bash
+# 使用项目内阿里云镜像配置
+mvn -s .mvn/settings.xml spring-boot:run
+
+# 或者使用默认配置
 mvn spring-boot:run
 ```
 
-或者使用IDE直接运行 `MiniServeHubApplication.java`
+**方式二：使用IDE**
+- 在IDE中直接运行 `src/main/java/com/miniservehub/MiniServeHubApplication.java`
 
-### 访问应用
+**方式三：使用JAR包**
+```bash
+# 先打包
+mvn -s .mvn/settings.xml clean package -DskipTests
 
-启动成功后，可以访问以下地址：
+# 运行JAR包
+java -jar target/miniservehub-services-1.0.0.jar
+```
 
-- **API文档**: http://localhost:8080/api/doc.html
-- **数据库监控**: http://localhost:8080/api/druid/ (admin/123456)
+#### 6. 验证启动成功
+```bash
+# 检查应用是否启动成功
+curl http://localhost:8080/api/actuator/health
+
+# 预期返回：{"status":"UP"}
+```
+
+## 📚 API文档访问
+
+### Knife4j API文档（推荐）
+- **访问地址**: http://localhost:8080/api/doc.html
+- **特性**: 
+  - 美观的界面设计
+  - 支持在线测试API
+  - 支持导出API文档
+  - 支持多种主题切换
+
+### Swagger UI（备选）
+- **访问地址**: http://localhost:8080/api/swagger-ui/index.html
+- **特性**: 
+  - 原生Swagger界面
+  - 完整的API规范展示
+  - 支持API调试
+
+### API文档使用说明
+
+#### 1. 接口测试
+```bash
+# 在API文档页面可以直接测试接口，也可以使用curl
+# 创建用户示例
+curl -X POST "http://localhost:8080/api/users" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "testuser",
+    "realName": "测试用户",
+    "email": "test@example.com",
+    "phone": "13800138000"
+  }'
+```
+
+#### 2. 响应格式
+所有API接口都遵循统一的响应格式：
+```json
+{
+  "code": 200,
+  "message": "操作成功",
+  "data": {},
+  "timestamp": 1693939200000,
+  "traceId": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+### 监控面板访问
+
+#### 数据库监控 - Druid
+- **访问地址**: http://localhost:8080/api/druid/
+- **默认账号**: admin / 123456
+- **功能**: 
+  - 数据源监控
+  - SQL监控
+  - 慢查询分析
+  - 连接池状态
+
+#### 应用监控 - Actuator
 - **健康检查**: http://localhost:8080/api/actuator/health
-- **应用指标**: http://localhost:8080/api/actuator/metrics
+- **应用信息**: http://localhost:8080/api/actuator/info  
+- **指标数据**: http://localhost:8080/api/actuator/metrics
+- **环境信息**: http://localhost:8080/api/actuator/env
+
+### 常用访问地址汇总
+
+| 服务 | 地址 | 说明 |
+|------|------|------|
+| API文档 | http://localhost:8080/api/doc.html | Knife4j文档界面 |
+| Swagger UI | http://localhost:8080/api/swagger-ui/index.html | 原生Swagger界面 |
+| 数据库监控 | http://localhost:8080/api/druid/ | Druid监控面板 |
+| 健康检查 | http://localhost:8080/api/actuator/health | 应用健康状态 |
+| 应用指标 | http://localhost:8080/api/actuator/metrics | 性能指标 |
 
 ## API接口
 
@@ -322,24 +477,85 @@ java -jar target/miniservehub-services-1.0.0.jar \
 - SQL执行统计
 - 慢查询分析
 
-## 故障排查
+## 🔧 故障排查
 
-### 常见问题
+### 快速诊断命令
+```bash
+# 一键检查环境
+echo "=== 环境检查 ==="
+java -version
+mvn -version
+mysql --version 2>/dev/null || echo "MySQL未安装或未在PATH中"
+redis-cli ping 2>/dev/null || echo "Redis未启动或未安装"
 
-1. **启动失败**
-   - 检查JDK版本是否为21+
-   - 确认数据库连接配置
-   - 查看启动日志错误信息
+echo "=== 端口检查 ==="
+lsof -i :8080 || echo "端口8080未被占用"
+lsof -i :3306 || echo "MySQL端口3306未被占用"  
+lsof -i :6379 || echo "Redis端口6379未被占用"
+```
 
-2. **数据库连接失败**
-   - 检查MySQL服务状态
-   - 验证用户名密码
-   - 确认数据库是否存在
+### 常见问题及解决方案
 
-3. **Redis连接失败**
-   - 检查Redis服务状态
-   - 验证连接配置
-   - 确认网络连通性
+#### 1. 启动失败
+**问题现象**: 应用启动时抛出异常
+```bash
+# 检查步骤
+java -version                    # 确认Java 21+
+mvn -s .mvn/settings.xml clean compile  # 检查编译是否成功
+tail -f logs/miniservehub.log   # 查看详细错误日志
+```
+
+**常见原因**:
+- JDK版本不是21+：升级到Java 21
+- 端口被占用：`lsof -i :8080` 检查并杀死占用进程
+- 配置文件错误：检查application.yml语法
+
+#### 2. 数据库连接失败
+**问题现象**: `java.sql.SQLException: Access denied`
+```bash
+# 诊断步骤
+mysql -u root -p                # 测试数据库连接
+show databases;                 # 确认数据库存在
+```
+
+**解决方案**:
+```sql
+-- 创建数据库和用户
+CREATE DATABASE miniservehub_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'miniservehub'@'localhost' IDENTIFIED BY 'your_password';
+GRANT ALL PRIVILEGES ON miniservehub_dev.* TO 'miniservehub'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+#### 3. Redis连接失败  
+**问题现象**: `Unable to connect to Redis`
+```bash
+# 诊断步骤
+redis-cli ping                  # 测试Redis连接
+redis-server --version          # 检查Redis版本
+```
+
+**解决方案**:
+```bash
+# 启动Redis
+brew services start redis      # macOS
+sudo systemctl start redis     # Linux
+redis-server                   # 直接启动
+```
+
+#### 4. 依赖下载失败
+**问题现象**: `Could not resolve dependencies`
+```bash
+# 清理并重新下载
+rm -rf ~/.m2/repository
+mvn -s .mvn/settings.xml clean install -U
+```
+
+#### 5. API文档无法访问
+**问题现象**: 404错误
+- 确认应用已启动：`curl http://localhost:8080/api/actuator/health`
+- 检查context-path配置：访问 `http://localhost:8080/api/doc.html`
+- 查看Knife4j配置是否正确
 
 ### 日志查看
 
