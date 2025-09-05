@@ -68,6 +68,7 @@ src/main/java/com/miniservehub/
 - **API文档** - Knife4j自动生成
 
 ### 开发特性
+{{ ... }}
 - **代码生成** - MyBatis Plus代码生成
 - **热部署** - Spring Boot DevTools
 - **多环境配置** - dev/test/prod环境隔离
@@ -76,10 +77,29 @@ src/main/java/com/miniservehub/
 ## 快速开始
 
 ### 环境要求
-- Java 21+
-- Maven 3.6+
-- MySQL 8.0+
-- Redis 6.0+
+- **Java**: 21+
+- **Maven**: 3.6+
+- **MySQL**: 8.0+
+- **Redis**: 6.0+
+
+### 快速启动
+
+#### 1. 使用启动脚本（推荐）
+```bash
+# 克隆项目
+git clone <your-repo-url>
+cd MiniServeHub-services-java
+
+# 启动默认测试环境
+./scripts/start.sh
+
+# 或启动其他环境
+./scripts/start.sh test     # 测试环境
+./scripts/start.sh staging  # 预发环境
+./scripts/start.sh prod     # 生产环境
+```
+
+#### 2. 手动启动步骤
 
 ### Maven阿里云镜像配置
 
@@ -380,11 +400,97 @@ spring:
       database: 0
 ```
 
-### 环境配置
+## 🌍 多环境配置
 
-- **开发环境** (`dev`): 详细日志，自动建表
-- **测试环境** (`test`): 适中日志，手动建表
-- **生产环境** (`prod`): 精简日志，手动建表
+项目支持3个环境，每个环境都有独立的配置文件：
+
+| 环境 | 配置文件 | 用途 | 数据库 | 日志级别 |
+|------|----------|------|--------|----------|
+| **test** | `application-test.yml` | 本地开发测试（默认） | 本地MySQL | DEBUG |
+| **staging** | `application-staging.yml` | 预发环境 | 预发服务器 | INFO |
+| **prod** | `application-prod.yml` | 生产环境 | 生产服务器 | WARN |
+
+### 环境启动方式
+
+#### 方式一：使用启动脚本（推荐）
+```bash
+# Linux/macOS
+./scripts/start.sh [环境名称]
+
+# Windows
+scripts\start.bat [环境名称]
+
+# 示例
+./scripts/start.sh               # 启动默认test环境
+./scripts/start.sh test          # 启动测试环境
+./scripts/start.sh staging       # 启动预发环境
+./scripts/start.sh prod          # 启动生产环境
+```
+
+#### 方式二：使用Maven命令
+```bash
+# 测试环境（默认）
+mvn -s .mvn/settings.xml spring-boot:run -Dspring-boot.run.profiles=test
+
+# 预发环境
+mvn -s .mvn/settings.xml spring-boot:run -Dspring-boot.run.profiles=staging
+
+# 生产环境
+mvn -s .mvn/settings.xml spring-boot:run -Dspring-boot.run.profiles=prod
+```
+
+#### 方式三：使用JAR包
+```bash
+# 先打包
+mvn -s .mvn/settings.xml clean package -DskipTests
+
+# 启动不同环境
+java -jar target/miniservehub-services-1.0.0.jar --spring.profiles.active=test
+java -jar target/miniservehub-services-1.0.0.jar --spring.profiles.active=staging
+java -jar target/miniservehub-services-1.0.0.jar --spring.profiles.active=prod
+```
+
+### 环境变量配置
+
+每个环境都提供了环境变量示例文件：
+
+```bash
+env-examples/
+├── .env.test          # 测试环境变量（本地开发）
+├── .env.staging       # 预发环境变量
+└── .env.prod          # 生产环境变量
+```
+
+**使用步骤**：
+1. 复制对应环境的示例文件：`cp env-examples/.env.prod .env`
+2. 修改环境变量值
+3. 启动应用时会自动加载
+
+### 环境特性对比
+
+#### 测试环境 (test) - 默认环境
+- 数据库：本地MySQL (`miniservehub_test`)
+- Redis：本地Redis (database: 0)
+- 日志：DEBUG级别，显示SQL
+- 监控：Druid完全开放
+- JVM：`-Xms512m -Xmx1g`
+- 用途：本地开发和调试
+
+#### 预发环境 (staging)
+- 数据库：预发服务器MySQL
+- Redis：预发服务器Redis集群
+- 日志：INFO级别，管理端口分离
+- 监控：限制IP访问
+- JVM：`-Xms2g -Xmx4g -XX:+UseG1GC`
+- 用途：上线前验证
+
+#### 生产环境 (prod)
+- 数据库：生产服务器MySQL集群
+- Redis：生产服务器Redis集群
+- 日志：WARN级别，GC日志
+- 监控：默认关闭Druid
+- JVM：G1GC优化配置
+- 用途：正式生产环境
 
 ## 部署指南
 

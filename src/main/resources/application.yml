@@ -9,10 +9,10 @@ server:
 
 spring:
   application:
-    name: miniservehub-services
+    name: miniservehub-service
   
   profiles:
-    active: dev
+    active: test
   
   # 数据源配置
   datasource:

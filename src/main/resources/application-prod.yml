@@ -1,0 +1,133 @@
+# 生产环境配置
+server:
+  port: 8080
+  tomcat:
+    max-threads: 300
+    min-spare-threads: 20
+    accept-count: 100
+    max-connections: 8192
+
+spring:
+  # 数据源配置 - 生产环境数据库
+  datasource:
+    url: jdbc:mysql://${DB_HOST:prod-db.miniservehub.com}:${DB_PORT:3306}/${DB_NAME:miniservehub_prod}?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    druid:
+      initial-size: 20
+      min-idle: 20
+      max-active: 100
+      max-wait: 60000
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 300000
+      validation-query: SELECT 1 FROM DUAL
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      pool-prepared-statements: true
+      max-pool-prepared-statement-per-connection-size: 20
+      filters: stat,wall,slf4j
+      connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=1000
+      stat-view-servlet:
+        enabled: ${DRUID_ENABLED:false}
+        url-pattern: /druid/*
+        login-username: ${DRUID_USERNAME}
+        login-password: ${DRUID_PASSWORD}
+        reset-enable: false
+        allow: ${DRUID_ALLOW_IPS:127.0.0.1}
+      web-stat-filter:
+        enabled: ${DRUID_ENABLED:false}
+        url-pattern: /*
+        exclusions: "*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*"
+
+  # JPA配置
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: false
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
+
+  # Redis配置 - 生产环境Redis集群
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+      database: 0
+      timeout: 10000ms
+      lettuce:
+        pool:
+          max-active: 64
+          max-wait: -1ms
+          max-idle: 32
+          min-idle: 8
+        cluster:
+          refresh:
+            adaptive: true
+            period: 30s
+
+  # 缓存配置
+  cache:
+    type: redis
+    redis:
+      time-to-live: 7200000
+      cache-null-values: false
+
+# 日志配置
+logging:
+  level:
+    com.miniservehub: WARN
+    org.springframework.web: ERROR
+    org.hibernate.SQL: ERROR
+    org.springframework.cache: ERROR
+    org.springframework.security: WARN
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n'
+  file:
+    name: logs/miniservehub-prod.log
+  logback:
+    rollingpolicy:
+      max-file-size: 200MB
+      max-history: 30
+      total-size-cap: 5GB
+
+# Druid监控配置已合并到上面的spring配置中
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,prometheus"
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: never
+  server:
+    port: ${MANAGEMENT_PORT:9090}
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# 业务配置
+miniservehub:
+  env: prod
+  debug: false
+  cache:
+    default-ttl: 7200
+  security:
+    enable-cors: false
+    jwt:
+      secret: ${JWT_SECRET}
+      expiration: ${JWT_EXPIRATION:86400}
+
+# JVM配置建议
+# -Xms2g -Xmx4g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+PrintGCDetails -Xloggc:logs/gc.log
