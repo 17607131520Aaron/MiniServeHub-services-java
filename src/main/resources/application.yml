@@ -85,7 +85,6 @@ spring:
     redis:
       host: localhost
       port: 6379
-      password: 
       database: 0
       timeout: 10000ms
       lettuce:

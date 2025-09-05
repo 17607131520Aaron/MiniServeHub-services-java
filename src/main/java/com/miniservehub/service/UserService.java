@@ -1,6 +1,8 @@
 package com.miniservehub.service;
 
 import com.miniservehub.dto.UserDTO;
+import com.miniservehub.dto.UserCreateDTO;
+import com.miniservehub.dto.UserUpdateDTO;
 import com.miniservehub.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,10 +21,10 @@ public interface UserService {
     /**
      * 创建用户
      *
-     * @param userDTO 用户信息
+     * @param userCreateDTO 用户创建信息
      * @return 用户信息
      */
-    UserDTO createUser(UserDTO userDTO);
+    UserDTO createUser(UserCreateDTO userCreateDTO);
 
     /**
      * 根据ID获取用户
@@ -44,10 +46,10 @@ public interface UserService {
      * 更新用户信息
      *
      * @param id 用户ID
-     * @param userDTO 用户信息
+     * @param userUpdateDTO 用户更新信息
      * @return 更新后的用户信息
      */
-    UserDTO updateUser(Long id, UserDTO userDTO);
+    UserDTO updateUser(Long id, UserUpdateDTO userUpdateDTO);
 
     /**
      * 删除用户

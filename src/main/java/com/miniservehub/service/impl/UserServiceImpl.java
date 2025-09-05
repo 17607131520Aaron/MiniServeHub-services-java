@@ -5,6 +5,8 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.BCrypt;
 import com.miniservehub.common.result.ResultCode;
 import com.miniservehub.dto.UserDTO;
+import com.miniservehub.dto.UserCreateDTO;
+import com.miniservehub.dto.UserUpdateDTO;
 import com.miniservehub.entity.User;
 import com.miniservehub.exception.BusinessException;
 import com.miniservehub.repository.UserRepository;
@@ -40,34 +42,38 @@ public class UserServiceImpl implements UserService {
     private UserRepository userRepository;
 
     @Override
-    public UserDTO createUser(UserDTO userDTO) {
-        logger.info("创建用户: {}", userDTO.getUsername());
+    public UserDTO createUser(UserCreateDTO userCreateDTO) {
+        logger.info("创建用户: {}", userCreateDTO.getUsername());
         
         // 参数验证
-        validateUserForCreate(userDTO);
+        validateUserForCreate(userCreateDTO);
         
         // 检查用户名是否已存在
-        if (userRepository.existsByUsername(userDTO.getUsername())) {
+        if (userRepository.existsByUsername(userCreateDTO.getUsername())) {
             throw new BusinessException(ResultCode.USERNAME_ALREADY_EXISTS);
         }
         
         // 检查邮箱是否已存在
-        if (StrUtil.isNotBlank(userDTO.getEmail()) && userRepository.existsByEmail(userDTO.getEmail())) {
+        if (StrUtil.isNotBlank(userCreateDTO.getEmail()) && userRepository.existsByEmail(userCreateDTO.getEmail())) {
             throw new BusinessException(ResultCode.EMAIL_ALREADY_EXISTS);
         }
         
         // 检查手机号是否已存在
-        if (StrUtil.isNotBlank(userDTO.getPhone()) && userRepository.existsByPhone(userDTO.getPhone())) {
+        if (StrUtil.isNotBlank(userCreateDTO.getPhone()) && userRepository.existsByPhone(userCreateDTO.getPhone())) {
             throw new BusinessException(ResultCode.PHONE_ALREADY_EXISTS);
         }
         
         // 创建用户实体
         User user = new User();
-        BeanUtil.copyProperties(userDTO, user, "id", "password");
+        BeanUtil.copyProperties(userCreateDTO, user, "id");
+        
+        // 加密密码
+        String encodedPassword = BCrypt.hashpw(userCreateDTO.getPassword());
+        user.setPassword(encodedPassword);
         
         // 设置默认值
         user.setStatus(1); // 默认启用
-        user.setUserType(2); // 默认普通用户
+        user.setUserType(userCreateDTO.getUserType() != null ? userCreateDTO.getUserType() : 2); // 默认普通用户
         user.setGender(user.getGender() != null ? user.getGender() : 0); // 默认未知性别
         
         // 保存用户
@@ -105,7 +111,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @CacheEvict(value = "user", allEntries = true)
-    public UserDTO updateUser(Long id, UserDTO userDTO) {
+    public UserDTO updateUser(Long id, UserUpdateDTO userUpdateDTO) {
         logger.info("更新用户信息: ID={}", id);
         
         // 获取现有用户
@@ -113,10 +119,10 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new BusinessException(ResultCode.USER_NOT_FOUND));
         
         // 验证更新数据
-        validateUserForUpdate(userDTO, existingUser);
+        validateUserForUpdate(userUpdateDTO, existingUser);
         
         // 更新用户信息
-        BeanUtil.copyProperties(userDTO, existingUser, "id", "username", "password", "createTime");
+        BeanUtil.copyProperties(userUpdateDTO, existingUser, "id", "username", "password", "createTime");
         
         User updatedUser = userRepository.save(existingUser);
         
@@ -285,30 +291,38 @@ public class UserServiceImpl implements UserService {
     /**
      * 验证创建用户参数
      */
-    private void validateUserForCreate(UserDTO userDTO) {
-        if (StrUtil.isBlank(userDTO.getUsername())) {
+    private void validateUserForCreate(UserCreateDTO userCreateDTO) {
+        if (StrUtil.isBlank(userCreateDTO.getUsername())) {
             throw new BusinessException(ResultCode.VALIDATE_FAILED, "用户名不能为空");
         }
         
-        if (userDTO.getUsername().length() < 3 || userDTO.getUsername().length() > 20) {
+        if (userCreateDTO.getUsername().length() < 3 || userCreateDTO.getUsername().length() > 20) {
             throw new BusinessException(ResultCode.VALIDATE_FAILED, "用户名长度必须在3-20个字符之间");
+        }
+        
+        if (StrUtil.isBlank(userCreateDTO.getPassword())) {
+            throw new BusinessException(ResultCode.VALIDATE_FAILED, "密码不能为空");
+        }
+        
+        if (userCreateDTO.getPassword().length() < 6 || userCreateDTO.getPassword().length() > 20) {
+            throw new BusinessException(ResultCode.VALIDATE_FAILED, "密码长度必须在6-20个字符之间");
         }
     }
 
     /**
      * 验证更新用户参数
      */
-    private void validateUserForUpdate(UserDTO userDTO, User existingUser) {
+    private void validateUserForUpdate(UserUpdateDTO userUpdateDTO, User existingUser) {
         // 检查邮箱是否被其他用户使用
-        if (StrUtil.isNotBlank(userDTO.getEmail()) && !userDTO.getEmail().equals(existingUser.getEmail())) {
-            if (userRepository.existsByEmail(userDTO.getEmail())) {
+        if (StrUtil.isNotBlank(userUpdateDTO.getEmail()) && !userUpdateDTO.getEmail().equals(existingUser.getEmail())) {
+            if (userRepository.existsByEmail(userUpdateDTO.getEmail())) {
                 throw new BusinessException(ResultCode.EMAIL_ALREADY_EXISTS);
             }
         }
         
         // 检查手机号是否被其他用户使用
-        if (StrUtil.isNotBlank(userDTO.getPhone()) && !userDTO.getPhone().equals(existingUser.getPhone())) {
-            if (userRepository.existsByPhone(userDTO.getPhone())) {
+        if (StrUtil.isNotBlank(userUpdateDTO.getPhone()) && !userUpdateDTO.getPhone().equals(existingUser.getPhone())) {
+            if (userRepository.existsByPhone(userUpdateDTO.getPhone())) {
                 throw new BusinessException(ResultCode.PHONE_ALREADY_EXISTS);
             }
         }

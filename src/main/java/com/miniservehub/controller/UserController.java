@@ -2,6 +2,8 @@ package com.miniservehub.controller;
 
 import com.miniservehub.common.result.Result;
 import com.miniservehub.dto.UserDTO;
+import com.miniservehub.dto.UserCreateDTO;
+import com.miniservehub.dto.UserUpdateDTO;
 import com.miniservehub.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -36,10 +38,10 @@ public class UserController {
 
     @Operation(summary = "创建用户", description = "创建新的用户")
     @PostMapping
-    public Result<UserDTO> createUser(@Valid @RequestBody UserDTO userDTO) {
-        logger.info("创建用户请求: {}", userDTO.getUsername());
-        UserDTO createdUser = userService.createUser(userDTO);
-        return Result.success("用户导出成功", createdUser);
+    public Result<UserDTO> createUser(@Valid @RequestBody UserCreateDTO userCreateDTO) {
+        logger.info("创建用户请求: {}", userCreateDTO.getUsername());
+        UserDTO createdUser = userService.createUser(userCreateDTO);
+        return Result.success("用户创建成功", createdUser);
     }
 
     @Operation(summary = "根据ID获取用户", description = "根据用户ID获取用户详细信息")
@@ -64,10 +66,10 @@ public class UserController {
     @PutMapping("/{id}")
     public Result<UserDTO> updateUser(
             @Parameter(description = "用户ID", required = true) @PathVariable Long id,
-            @Valid @RequestBody UserDTO userDTO) {
+            @Valid @RequestBody UserUpdateDTO userUpdateDTO) {
         logger.info("更新用户请求: ID={}", id);
-        UserDTO updatedUser = userService.updateUser(id, userDTO);
-        return Result.success("用户状态更新成功", updatedUser);
+        UserDTO updatedUser = userService.updateUser(id, userUpdateDTO);
+        return Result.success("用户信息更新成功", updatedUser);
     }
 
     @Operation(summary = "删除用户", description = "根据ID删除用户")
