@@ -146,6 +146,20 @@ public class Result<T> implements Serializable {
         return new Result<>(ResultCode.FORBIDDEN.getCode(), message);
     }
 
+    /**
+     * 自定义错误响应
+     */
+    public static <T> Result<T> custom(Integer code, String message) {
+        return new Result<>(code, message);
+    }
+
+    /**
+     * 自定义错误响应带数据
+     */
+    public static <T> Result<T> custom(Integer code, String message, T data) {
+        return new Result<>(code, message, data);
+    }
+
     // Getters and Setters
     public Integer getCode() {
         return code;
