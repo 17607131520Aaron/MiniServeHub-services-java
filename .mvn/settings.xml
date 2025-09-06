@@ -77,4 +77,7 @@
     <activeProfile>aliyun</activeProfile>
   </activeProfiles>
 
+  <!-- 本地仓库配置 -->
+  <localRepository>./maven-local-repo</localRepository>
+
 </settings>
