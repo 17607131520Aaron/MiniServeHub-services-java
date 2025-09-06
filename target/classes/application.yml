@@ -1,98 +1,106 @@
+# MiniServeHub 统一配置文件
+# 所有环境配置都通过环境变量控制
+
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
   servlet:
     context-path: /api
   tomcat:
     uri-encoding: UTF-8
-    max-threads: 200
-    min-spare-threads: 10
+    max-threads: ${TOMCAT_MAX_THREADS:200}
+    min-spare-threads: ${TOMCAT_MIN_THREADS:10}
+    accept-count: ${TOMCAT_ACCEPT_COUNT:100}
+    max-connections: ${TOMCAT_MAX_CONNECTIONS:8192}
 
 spring:
   application:
     name: miniservehub-services
   
   profiles:
-    active: test
+    active: ${SPRING_PROFILES_ACTIVE:test}
   
   # 数据源配置
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/miniservehub?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
-    username: root
-    password: 123456
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:miniservehub_test}?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=${DB_SSL:false}&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=${DB_ALLOW_PUBLIC_KEY:true}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:123456789}
     druid:
-      # 初始连接数
-      initial-size: 5
-      # 最小连接池数量
-      min-idle: 10
-      # 最大连接池数量
-      max-active: 20
-      # 配置获取连接等待超时的时间
-      max-wait: 60000
-      # 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
-      time-between-eviction-runs-millis: 60000
-      # 配置一个连接在池中最小生存的时间，单位是毫秒
-      min-evictable-idle-time-millis: 300000
-      # 配置一个连接在池中最大生存的时间，单位是毫秒
-      max-evictable-idle-time-millis: 900000
-      # 配置检测连接是否有效
+      # 连接池配置
+      initial-size: ${DRUID_INITIAL_SIZE:10}
+      min-idle: ${DRUID_MIN_IDLE:10}
+      max-active: ${DRUID_MAX_ACTIVE:50}
+      max-wait: ${DRUID_MAX_WAIT:60000}
+      time-between-eviction-runs-millis: ${DRUID_EVICTION_RUNS:60000}
+      min-evictable-idle-time-millis: ${DRUID_MIN_EVICTABLE:300000}
+      max-evictable-idle-time-millis: ${DRUID_MAX_EVICTABLE:900000}
+      # 连接验证
       validation-query: SELECT 1 FROM DUAL
       test-while-idle: true
       test-on-borrow: false
       test-on-return: false
-      # 打开PSCache，并且指定每个连接上PSCache的大小
+      # 预编译语句缓存
       pool-prepared-statements: true
       max-pool-prepared-statement-per-connection-size: 20
-      # 配置监控统计拦截的filters，去掉后监控界面sql无法统计，'wall'用于防火墙
+      # 监控配置
       filters: stat,wall,slf4j
-      # 通过connectProperties属性来打开mergeSql功能；慢SQL记录
-      connection-properties: druid.stat.mergeSql\=true;druid.stat.slowSqlMillis\=5000
-      # 配置DruidStatFilter
-      web-stat-filter:
-        enabled: true
-        url-pattern: "/*"
-        exclusions: "*.js,*.gif,*.jpg,*.bmp,*.png,*.css,*.ico,/druid/*"
-      # 配置DruidStatViewServlet
+      connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=${DRUID_SLOW_SQL_MILLIS:3000}
+      # Druid监控界面
       stat-view-servlet:
-        enabled: true
-        url-pattern: "/druid/*"
-        # IP白名单(没有配置或者为空，则允许所有访问)
-        allow: 127.0.0.1,192.168.163.1
-        # IP黑名单 (存在共同时，deny优先于allow)
-        deny: 192.168.1.73
-        # 禁用HTML页面上的"Reset All"功能
+        enabled: ${DRUID_ENABLED:true}
+        url-pattern: /druid/*
+        login-username: ${DRUID_USERNAME:admin}
+        login-password: ${DRUID_PASSWORD:123456}
         reset-enable: false
-        # 登录名
-        login-username: admin
-        # 登录密码
-        login-password: 123456
+        allow: ${DRUID_ALLOW_IPS:127.0.0.1,10.0.0.0/8}
+      # Druid Web过滤器
+      web-stat-filter:
+        enabled: ${DRUID_ENABLED:true}
+        url-pattern: /*
+        exclusions: "*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*"
 
   # JPA配置
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: ${JPA_DDL_AUTO:update}
+    show-sql: ${JPA_SHOW_SQL:true}
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQL8Dialect
-        format_sql: true
-        use_sql_comments: true
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: ${JPA_FORMAT_SQL:true}
+        use_sql_comments: ${JPA_USE_COMMENTS:true}
+        jdbc:
+          batch_size: ${JPA_BATCH_SIZE:50}
+        order_inserts: ${JPA_ORDER_INSERTS:true}
+        order_updates: ${JPA_ORDER_UPDATES:true}
     open-in-view: false
 
   # Redis配置
   data:
     redis:
-      host: localhost
-      port: 6379
-      database: 0
-      timeout: 10000ms
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
+      timeout: ${REDIS_TIMEOUT:10000ms}
       lettuce:
         pool:
-          max-active: 8
-          max-wait: -1ms
-          max-idle: 8
-          min-idle: 0
+          max-active: ${REDIS_MAX_ACTIVE:16}
+          max-wait: ${REDIS_MAX_WAIT:-1ms}
+          max-idle: ${REDIS_MAX_IDLE:8}
+          min-idle: ${REDIS_MIN_IDLE:2}
+        cluster:
+          refresh:
+            adaptive: ${REDIS_CLUSTER_ADAPTIVE:false}
+            period: ${REDIS_CLUSTER_PERIOD:30s}
+
+  # 缓存配置
+  cache:
+    type: redis
+    redis:
+      time-to-live: ${CACHE_TTL:1800000}
+      cache-null-values: false
 
   # JSON配置
   jackson:
@@ -132,25 +140,28 @@ knife4j:
 # 日志配置
 logging:
   level:
-    com.miniservehub: DEBUG
-    org.springframework.web: INFO
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    com.miniservehub: ${LOG_LEVEL_MINISERVEHUB:DEBUG}
+    org.springframework.web: ${LOG_LEVEL_WEB:INFO}
+    org.hibernate.SQL: ${LOG_LEVEL_SQL:DEBUG}
+    org.hibernate.type.descriptor.sql.BasicBinder: ${LOG_LEVEL_SQL_BINDER:TRACE}
+    org.springframework.cache: ${LOG_LEVEL_CACHE:DEBUG}
+    org.springframework.security: ${LOG_LEVEL_SECURITY:WARN}
   pattern:
     console: '%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n'
     file: '%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n'
   file:
-    name: logs/miniservehub.log
+    name: ${LOG_FILE_NAME:logs/miniservehub.log}
   logback:
     rollingpolicy:
-      max-file-size: 100MB
-      max-history: 30
+      max-file-size: ${LOG_MAX_FILE_SIZE:100MB}
+      max-history: ${LOG_MAX_HISTORY:30}
+      total-size-cap: ${LOG_TOTAL_SIZE_CAP:1GB}
 
 # JWT配置
 jwt:
-  secret: MiniServeHub2024SecretKeyForJWTTokenGenerationAndValidation
-  expiration: 86400 # 24小时（秒）
-  refresh-expiration: 604800 # 7天（秒）
+  secret: ${JWT_SECRET:MiniServeHub2024SecretKeyForJWTTokenGenerationAndValidation}
+  expiration: ${JWT_EXPIRATION:86400}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800}
   header: Authorization
   token-prefix: "Bearer "
 
@@ -159,43 +170,26 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus
+        include: ${MANAGEMENT_ENDPOINTS:health,info,metrics,prometheus}
+      base-path: ${MANAGEMENT_BASE_PATH:/actuator}
   endpoint:
     health:
-      show-details: always
+      show-details: ${MANAGEMENT_HEALTH_DETAILS:always}
+  server:
+    port: ${MANAGEMENT_PORT:9090}
   metrics:
     export:
       prometheus:
         enabled: true
 
----
-# 开发环境配置
-spring:
-  config:
-    activate:
-      on-profile: dev
-  datasource:
-    url: jdbc:mysql://localhost:3306/miniservehub_dev?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
-
----
-# 测试环境配置
-spring:
-  config:
-    activate:
-      on-profile: test
-  datasource:
-    url: jdbc:mysql://localhost:3306/miniservehub_test?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
-
----
-# 生产环境配置
-spring:
-  config:
-    activate:
-      on-profile: prod
-  datasource:
-    url: jdbc:mysql://localhost:3306/miniservehub_prod?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
-  jpa:
-    show-sql: false
-logging:
-  level:
-    com.miniservehub: INFO
+# 业务配置
+miniservehub:
+  env: ${MINISERVEHUB_ENV:test}
+  debug: ${MINISERVEHUB_DEBUG:true}
+  cache:
+    default-ttl: ${MINISERVEHUB_CACHE_TTL:600}
+  security:
+    enable-cors: ${MINISERVEHUB_CORS:true}
+    jwt:
+      secret: ${JWT_SECRET:MiniServeHub2024SecretKeyForJWTTokenGenerationAndValidation}
+      expiration: ${JWT_EXPIRATION:86400}
