@@ -6,6 +6,14 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 用户实体类
@@ -20,7 +28,7 @@ import jakarta.validation.constraints.Size;
     @Index(name = "idx_phone", columnList = "phone")
 })
 @TableName("sys_user")
-public class User extends BaseEntity {
+public class User extends BaseEntity implements UserDetails {
 
     /**
      * 用户名
@@ -105,6 +113,17 @@ public class User extends BaseEntity {
      */
     @Column(name = "remark", length = 500)
     private String remark;
+
+    /**
+     * 用户拥有的角色
+     */
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "sys_user_role",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<Role> roles = new HashSet<>();
 
     // 构造函数
     public User() {}
@@ -220,6 +239,52 @@ public class User extends BaseEntity {
 
     public void setRemark(String remark) {
         this.remark = remark;
+    }
+
+    public Set<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
+    }
+
+    // Spring Security UserDetails 接口实现
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        Set<GrantedAuthority> authorities = new HashSet<>();
+        
+        // 添加角色权限
+        for (Role role : roles) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getRoleCode()));
+            
+            // 添加角色下的具体权限
+            for (Permission permission : role.getPermissions()) {
+                authorities.add(new SimpleGrantedAuthority(permission.getPermissionCode()));
+            }
+        }
+        
+        return authorities;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return this.status == 1; // 状态为1表示启用
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return this.status == 1; // 状态为1表示启用
     }
 
     @Override

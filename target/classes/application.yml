@@ -9,7 +9,7 @@ server:
 
 spring:
   application:
-    name: miniservehub-service
+    name: miniservehub-services
   
   profiles:
     active: test
@@ -145,6 +145,14 @@ logging:
     rollingpolicy:
       max-file-size: 100MB
       max-history: 30
+
+# JWT配置
+jwt:
+  secret: MiniServeHub2024SecretKeyForJWTTokenGenerationAndValidation
+  expiration: 86400 # 24小时（秒）
+  refresh-expiration: 604800 # 7天（秒）
+  header: Authorization
+  token-prefix: "Bearer "
 
 # 监控配置
 management:
